@@ -1,28 +1,387 @@
+
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-    <meta name="format-detection" content="telphone=no, email=no" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="HandheldFriendly" content="true">
-    <meta name="MobileOptimized" content="320">
-    <meta name="screen-orientation" content="portrait">
-    <meta name="x5-orientation" content="portrait">
-    <meta name="msapplication-tap-highlight" content="no">
-    <title>UC News</title>
-<!--     <link rel="stylesheet" href="../css/normalize.css">
-    <link rel="stylesheet" href="../css/ui-custom.css">
-    <link rel="stylesheet" href="../css/skin-ice.css"> -->
-    <script type="text/javascript" src="../js/zepto.js"></script>
-    <script type="text/javascript" src="../js/ua-parser.js"></script>
-  </head>
-  <body>
-    <div id="app">
-        <router-view class="view"></router-view>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>A&J's Hub</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@400;700;900&display=swap');
+        :root {
+            --bg: #1e1108;
+            --card-bg: #2c1d10;
+            --leather: #3a2412;
+            --leather-light: #4e3220;
+            --turquoise: #3dd6c8;
+            --turquoise-dim: #2ab5a9;
+            --gold: #c9924a;
+            --gold-light: #e8b96a;
+            --parchment: #f0dfa8;
+            --text-dark: #2c1a0e;
+            --text-muted: #8a6a4a;
+            --red: #b71c1c;
+            --dashed: rgba(201,146,74,0.4);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); background-image: radial-gradient(rgba(164,120,70,0.18) 1px, transparent 1px); background-size: 18px 18px; font-family: 'Lato', sans-serif; min-height: 100vh; display: flex; justify-content: center; padding: 12px; }
+        .outer-frame { width: 100%; max-width: 430px; border: 2px dashed var(--dashed); border-radius: 22px; padding: 6px; }
+        .app-container { background: var(--card-bg); border-radius: 18px; border: 3px solid var(--leather-light); box-shadow: inset 0 0 50px rgba(0,0,0,0.6), 0 8px 30px rgba(0,0,0,0.7); padding: 18px 16px 20px; min-height: 88vh; display: flex; flex-direction: column; }
+        .sync-bar { text-align: center; font-size: 0.68rem; font-weight: 700; letter-spacing: 1px; padding: 4px 10px; border-radius: 20px; margin-bottom: 10px; transition: all 0.3s; }
+        .sync-bar.online { background: rgba(61,214,200,0.15); color: var(--turquoise); }
+        .sync-bar.offline { background: rgba(183,28,28,0.2); color: #ef5350; }
+        .sync-bar.syncing { background: rgba(201,146,74,0.2); color: var(--gold); }
+        header { text-align: center; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 2px solid var(--turquoise); }
+        .header-icons { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+        .header-icon { font-size: 1.5rem; color: var(--turquoise); }
+        .chef-hat { font-size: 2rem; display: block; text-align: center; margin-bottom: 2px; }
+        h1 { font-family: 'Playfair Display', serif; color: var(--turquoise); font-size: 1.9rem; letter-spacing: 3px; text-shadow: 0 2px 8px rgba(61,214,200,0.3); }
+        .subtitle { color: var(--gold); font-size: 0.65rem; letter-spacing: 4px; text-transform: uppercase; margin-top: 4px; font-style: italic; }
+        .header-glow { width: 60px; height: 3px; background: radial-gradient(ellipse, var(--turquoise), transparent); margin: 8px auto 0; border-radius: 50%; }
+        .tabs { display: flex; gap: 4px; margin-bottom: 14px; background: var(--leather); border-radius: 10px; padding: 4px; }
+        .tab-btn { flex: 1; padding: 9px 4px; border-radius: 7px; border: none; background: transparent; color: var(--text-muted); font-family: 'Lato', sans-serif; font-size: 0.62rem; font-weight: 700; cursor: pointer; text-align: center; transition: all 0.2s; letter-spacing: 0.5px; text-transform: uppercase; }
+        .tab-btn.active { background: var(--turquoise); color: var(--text-dark); }
+        .panel { display: none; flex-direction: column; flex-grow: 1; }
+        .panel.active { display: flex; }
+        .field { width: 100%; padding: 12px 14px; border-radius: 8px; border: none; background: var(--parchment); font-size: 0.95rem; font-family: 'Lato', sans-serif; color: var(--text-dark); margin-bottom: 8px; outline: none; }
+        .field::placeholder { color: #b09060; }
+        select.field { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a6a4a' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; cursor: pointer; }
+        .add-btn-full { width: 100%; padding: 13px; background: var(--turquoise); color: var(--text-dark); border: none; border-radius: 8px; font-family: 'Lato', sans-serif; font-size: 1rem; font-weight: 900; letter-spacing: 3px; cursor: pointer; margin-bottom: 12px; }
+        .add-btn-full:active { background: var(--turquoise-dim); }
+        .filter-bar { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px; scrollbar-width: none; }
+        .filter-bar::-webkit-scrollbar { display: none; }
+        .filter-chip { flex-shrink: 0; padding: 6px 14px; border-radius: 20px; border: 2px solid var(--leather-light); background: var(--leather); color: var(--text-muted); font-size: 0.75rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+        .filter-chip.active { background: var(--turquoise); color: var(--text-dark); border-color: var(--turquoise); }
+        .item-list { list-style: none; padding: 0; margin: 0; flex-grow: 1; overflow-y: auto; }
+        .empty-msg { color: var(--gold); text-align: center; padding: 40px 20px; font-style: italic; font-size: 1rem; opacity: 0.8; }
+        .meal-card { background: var(--parchment); margin-bottom: 10px; padding: 11px 40px 9px 14px; border-radius: 8px; border-left: 7px solid var(--turquoise); position: relative; box-shadow: 2px 4px 10px rgba(0,0,0,0.4); }
+        .cat-badge { font-size: 0.68rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 2px; }
+        .item-name { font-size: 1rem; font-weight: 700; color: var(--text-dark); word-break: break-word; display: block; margin-bottom: 4px; }
+        .meal-notes { font-size: 0.78rem; color: #7a5c3a; font-style: italic; display: block; margin-bottom: 4px; word-break: break-word; }
+        .erase-btn { background: var(--red); color: white; border: none; border-radius: 50%; width: 26px; height: 26px; position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 1rem; line-height: 26px; text-align: center; padding: 0; }
+        .star { font-size: 1.2rem; color: #c0a060; cursor: pointer; }
+        .star.active { color: var(--turquoise); text-shadow: 0 0 4px var(--turquoise); }
+        .randomizer-area { padding-top: 12px; border-top: 1px dashed var(--dashed); margin-top: 6px; }
+        .roll-filter { margin-bottom: 10px; }
+        .buckle-btn { width: 100%; background: linear-gradient(145deg, var(--gold-light), var(--gold)); border: 3px solid #8a6030; border-radius: 50px; padding: 14px; font-size: 1.05rem; font-weight: 900; letter-spacing: 3px; color: var(--text-dark); cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.4); font-family: 'Lato', sans-serif; }
+        .buckle-btn:active { transform: scale(0.97); }
+        #luckyResult { margin-top: 10px; color: var(--turquoise); font-weight: 700; font-size: 1.1rem; min-height: 1.4rem; text-align: center; }
+        .export-row { display: flex; justify-content: center; margin-top: 10px; }
+        .export-btn { background: transparent; border: 2px solid var(--gold); color: var(--gold); border-radius: 8px; padding: 8px 20px; font-size: 0.8rem; font-weight: 700; cursor: pointer; letter-spacing: 1px; font-family: 'Lato', sans-serif; }
+        .day-block { background: var(--parchment); margin-bottom: 8px; border-radius: 8px; border-left: 7px solid var(--gold); box-shadow: 2px 4px 10px rgba(0,0,0,0.4); overflow: hidden; }
+        .day-header { display: flex; align-items: center; padding: 10px 12px; cursor: pointer; gap: 8px; }
+        .day-label { font-weight: 700; color: var(--text-dark); font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase; min-width: 82px; }
+        .day-meal { color: #7a5c3a; font-size: 0.82rem; font-style: italic; flex: 1; }
+        .day-erase { background: var(--red); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-size: 0.85rem; line-height: 22px; text-align: center; padding: 0; flex-shrink: 0; }
+        .day-input-row { display: none; padding: 8px 12px; gap: 8px; align-items: center; border-top: 1px solid #d4c090; background: #fffbe8; }
+        .day-input-row.open { display: flex; }
+        .day-input-row input { flex: 1; padding: 7px 10px; border-radius: 6px; border: 1px solid #c0a060; background: #fffdf0; font-size: 0.88rem; font-family: 'Lato', sans-serif; outline: none; }
+        .day-save-btn { background: var(--gold); border: none; border-radius: 6px; padding: 7px 14px; font-weight: 700; color: var(--text-dark); cursor: pointer; font-family: 'Lato', sans-serif; }
+        .simple-card { background: var(--parchment); margin-bottom: 8px; padding: 12px 44px 12px 12px; border-radius: 8px; border-left: 7px solid #7ec8a4; position: relative; box-shadow: 2px 4px 10px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 10px; }
+        .simple-card.shopping-card { border-left-color: #e88c5a; }
+        .simple-card.done .simple-text { text-decoration: line-through; color: #aaa; }
+        .simple-check { width: 22px; height: 22px; border-radius: 4px; border: 2px solid var(--turquoise); background: none; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: transparent; font-size: 0.85rem; }
+        .simple-check.checked { background: var(--turquoise); color: var(--text-dark); }
+        .simple-text { font-size: 0.95rem; color: var(--text-dark); font-weight: 700; word-break: break-word; flex: 1; }
+        .section-label { color: var(--text-muted); font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+    </style>
+</head><body>
+<div class="outer-frame">
+<div class="app-container">
+    <div class="sync-bar syncing" id="syncBar">⏳ CONNECTING...</div>
+    <header>
+        <span class="chef-hat">👨‍🍳</span>
+        <div class="header-icons">
+            <span class="header-icon">🍴</span>
+            <h1>A&amp;J's Hub</h1>
+            <span class="header-icon">☕</span>
+        </div>
+        <div class="subtitle">The Kitchen Command Post</div>
+        <div class="header-glow"></div>
+    </header>
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('meals')">Meal Hub</button>
+        <button class="tab-btn" onclick="switchTab('todo')">To-Do</button>
+        <button class="tab-btn" onclick="switchTab('planner')">Weekly Plan</button>
+        <button class="tab-btn" onclick="switchTab('shopping')">Shopping</button>
     </div>
-    <script src="../js/build.js"></script>
-  </body>
+    <div class="panel active" data-tab="meals">
+        <input type="text" class="field" id="mealInput" placeholder="Add a meal idea...">
+        <select class="field" id="mealCat">
+            <option value="Dinner">🍽 Dinner</option>
+            <option value="Breakfast">☕ Breakfast</option>
+            <option value="Lunch">🥪 Lunch</option>
+            <option value="Snack">🍎 Snack</option>
+        </select>
+        <input type="text" class="field" id="mealNotes" placeholder="Notes or recipe URL (optional)">
+        <button class="add-btn-full" onclick="addMeal()">ADD</button>
+        <div class="filter-bar" id="filterBar"></div>
+        <ul id="mealList" class="item-list"></ul>
+        <div class="randomizer-area">
+            <select class="field roll-filter" id="rollFilter">
+                <option value="all">Roll from: All categories</option>
+                <option value="Breakfast">Roll from: ☕ Breakfast</option>
+                <option value="Lunch">Roll from: 🥪 Lunch</option>
+                <option value="Dinner">Roll from: 🍽 Dinner</option>
+                <option value="Snack">Roll from: 🍎 Snack</option>
+            </select>
+            <button class="buckle-btn" onclick="randomizeMeal()">ROLL FOR DINNER</button>
+            <div id="luckyResult"></div>
+            <div class="export-row"><button class="export-btn" onclick="exportMeals()">⬇ Export</button></div>
+        </div>
+    </div>
+    <div class="panel" data-tab="todo">
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+            <input type="text" class="field" id="todoInput" placeholder="Add something to do..." style="margin:0;flex:1;">
+            <button class="add-btn-full" onclick="addTodo()" style="width:auto;padding:12px 16px;margin:0;">ADD</button>
+        </div>
+        <ul id="todoList" class="item-list"></ul>
+    </div>
+    <div class="panel" data-tab="planner">
+        <div class="section-label">Tap a day to assign a meal</div>
+        <ul id="plannerList" class="item-list"></ul>
+    </div>
+    <div class="panel" data-tab="shopping">
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+            <input type="text" class="field" id="shopInput" placeholder="Add an item..." style="margin:0;flex:1;">
+            <button class="add-btn-full" onclick="addShop()" style="width:auto;padding:12px 16px;margin:0;">ADD</button>
+        </div>
+        <ul id="shopList" class="item-list"></ul>
+    </div>
+</div>
+</div><script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDYKGqWxF3s26tTCOygG7hWLFQz3o-xqas",
+        authDomain: "ajs-hub.firebaseapp.com",
+        projectId: "ajs-hub",
+        storageBucket: "ajs-hub.firebasestorage.app",
+        messagingSenderId: "881403995994",
+        appId: "1:881403995994:web:60c5c18a506a12a17fb563"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+    const CATS = ['All','Breakfast','Lunch','Dinner','Snack'];
+    const CAT_EMOJI = { Breakfast:'☕', Lunch:'🥪', Dinner:'🍽', Snack:'🍎' };
+
+    let meals = [], todos = [], shopping = [], planner = {}, activeFilter = 'All';
+
+    function syncBar(state, msg) {
+        const el = document.getElementById('syncBar');
+        el.className = 'sync-bar ' + state;
+        el.textContent = msg;
+    }
+
+    function esc(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    window.switchTab = (tab) => {
+        const keys = ['meals','todo','planner','shopping'];
+        document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', keys[i]===tab));
+        document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.dataset.tab===tab));
+    };
+
+    window.addMeal = async () => {
+        const name = document.getElementById('mealInput').value.trim();
+        const cat = document.getElementById('mealCat').value;
+        const notes = document.getElementById('mealNotes').value.trim();
+        if (!name) return;
+        if (meals.some(m => m.name.toLowerCase() === name.toLowerCase())) { alert('Meal already exists!'); return; }
+        syncBar('syncing','⏳ SAVING...');
+        const id = Date.now().toString();
+        await setDoc(doc(db,'meals',id), { id, name, cat, notes, rating: 3, createdAt: Date.now() });
+        document.getElementById('mealInput').value = '';
+        document.getElementById('mealNotes').value = '';
+    };
+
+    window.deleteMeal = async (id) => {
+        if (confirm('Erase this meal idea?')) { syncBar('syncing','⏳ SAVING...'); await deleteDoc(doc(db,'meals',id)); }
+    };
+
+    window.setRating = async (id, r) => {
+        const m = meals.find(m => m.id === id);
+        if (m) await setDoc(doc(db,'meals',id), { ...m, rating: r });
+    };
+
+    window.randomizeMeal = () => {
+        const rollCat = document.getElementById('rollFilter').value;
+        let pool = meals.filter(m => rollCat === 'all' || m.cat === rollCat);
+        if (!pool.length) { alert('No meals in that category!'); return; }
+        let weighted = [];
+        pool.forEach(m => { for (let i = 0; i < m.rating; i++) weighted.push(m.name); });
+        document.getElementById('luckyResult').innerText = '🎲 WINNER: ' + weighted[Math.floor(Math.random() * weighted.length)];
+    };
+
+    window.exportMeals = () => {
+        const lines = meals.map(m => `${m.name} (${m.cat})${m.notes ? ' — '+m.notes : ''} [${'★'.repeat(m.rating)}]`);
+        const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'aj-meals.txt'; a.click();
+    };
+
+    function renderFilterBar() {
+        const bar = document.getElementById('filterBar');
+        bar.innerHTML = '';
+        CATS.forEach(cat => {
+            const count = cat === 'All' ? meals.length : meals.filter(m => m.cat === cat).length;
+            const chip = document.createElement('button');
+            chip.className = 'filter-chip' + (activeFilter === cat ? ' active' : '');
+            chip.textContent = (cat !== 'All' ? CAT_EMOJI[cat]+' ' : '') + cat + ' ('+count+')';
+            chip.onclick = () => { activeFilter = cat; renderMeals(); };
+            bar.appendChild(chip);
+        });
+    }
+
+    function renderMeals() {
+        renderFilterBar();
+        const list = document.getElementById('mealList');
+        list.innerHTML = '';
+        const visible = activeFilter === 'All' ? meals : meals.filter(m => m.cat === activeFilter);
+        if (!visible.length) { list.innerHTML = `<li class="empty-msg">No meals here yet. Add your first idea above.</li>`; return; }
+        visible.forEach(meal => {
+            const li = document.createElement('li');
+            li.className = 'meal-card';
+            let stars = '';
+            for (let i = 1; i <= 5; i++)
+                stars += `<span class="star ${i <= meal.rating ? 'active':''}" onclick="setRating('${meal.id}',${i})">★</span>`;
+            li.innerHTML = `
+                <span class="cat-badge">${CAT_EMOJI[meal.cat]||''} ${esc(meal.cat)}</span>
+                <span class="item-name">${esc(meal.name)}</span>
+                ${meal.notes ? `<span class="meal-notes">${esc(meal.notes)}</span>` : ''}
+                <button class="erase-btn" onclick="deleteMeal('${meal.id}')">×</button>
+                <div>${stars}</div>`;
+            list.appendChild(li);
+        });
+    }
+
+    onSnapshot(query(collection(db,'meals'), orderBy('createdAt')), snap => {
+        meals = snap.docs.map(d => d.data());
+        renderMeals();
+        syncBar('online','✅ LIVE — CHANGES SYNC INSTANTLY');
+    }, () => syncBar('offline','❌ OFFLINE — CHECK CONNECTION'));
+
+    window.toggleDayInput = (day) => {
+        const row = document.getElementById('dayrow-'+day);
+        if (row.classList.toggle('open')) document.getElementById('dayinp-'+day).focus();
+    };
+    window.saveDayInput = async (day) => {
+        const val = document.getElementById('dayinp-'+day).value.trim();
+        syncBar('syncing','⏳ SAVING...');
+        await setDoc(doc(db,'planner',day), { day, meal: val });
+        document.getElementById('dayrow-'+day).classList.remove('open');
+    };
+    window.clearDay = async (day) => {
+        syncBar('syncing','⏳ SAVING...');
+        await setDoc(doc(db,'planner',day), { day, meal: '' });
+    };
+
+    function renderPlanner() {
+        const list = document.getElementById('plannerList');
+        list.innerHTML = '';
+        DAYS.forEach(day => {
+            const meal = planner[day] || '';
+            const li = document.createElement('li');
+            li.className = 'day-block';
+            li.innerHTML = `
+                <div class="day-header" onclick="toggleDayInput('${day}')">
+                    <span class="day-label">${day}</span>
+                    <span class="day-meal">${meal ? esc(meal) : '—'}</span>
+                    ${meal ? `<button class="day-erase" onclick="event.stopPropagation();clearDay('${day}')">×</button>` : `<span style="width:22px;display:inline-block"></span>`}
+                </div>
+                <div class="day-input-row" id="dayrow-${day}">
+                    <input type="text" id="dayinp-${day}" placeholder="Enter meal..." value="${esc(meal)}" onkeydown="if(event.key==='Enter')saveDayInput('${day}')">
+                    <button class="day-save-btn" onclick="saveDayInput('${day}')">Save</button>
+                </div>`;
+            list.appendChild(li);
+        });
+    }
+
+    onSnapshot(collection(db,'planner'), snap => {
+        snap.docs.forEach(d => { planner[d.id] = d.data().meal || ''; });
+        renderPlanner();
+    });
+
+    window.addTodo = async () => {
+        const inp = document.getElementById('todoInput');
+        if (!inp.value.trim()) return;
+        syncBar('syncing','⏳ SAVING...');
+        const id = Date.now().toString();
+        await setDoc(doc(db,'todo',id), { id, text: inp.value.trim(), done: false, createdAt: Date.now() });
+        inp.value = '';
+    };
+    window.toggleTodo = async (id) => {
+        const t = todos.find(t => t.id === id);
+        if (t) await setDoc(doc(db,'todo',id), { ...t, done: !t.done });
+    };
+    window.deleteTodo = async (id) => {
+        if (confirm('Erase this task?')) await deleteDoc(doc(db,'todo',id));
+    };
+
+    function renderTodo() {
+        const list = document.getElementById('todoList');
+        list.innerHTML = '';
+        if (!todos.length) { list.innerHTML = `<li class="empty-msg">Nothing to do yet!</li>`; return; }
+        todos.forEach(t => {
+            const li = document.createElement('li');
+            li.className = 'simple-card' + (t.done?' done':'');
+            li.innerHTML = `
+                <div class="simple-check ${t.done?'checked':''}" onclick="toggleTodo('${t.id}')">✓</div>
+                <span class="simple-text">${esc(t.text)}</span>
+                <button class="erase-btn" onclick="deleteTodo('${t.id}')">×</button>`;
+            list.appendChild(li);
+        });
+    }
+
+    onSnapshot(query(collection(db,'todo'), orderBy('createdAt')), snap => {
+        todos = snap.docs.map(d => d.data());
+        renderTodo();
+    });
+
+    window.addShop = async () => {
+        const inp = document.getElementById('shopInput');
+        if (!inp.value.trim()) return;
+        syncBar('syncing','⏳ SAVING...');
+        const id = Date.now().toString();
+        await setDoc(doc(db,'shopping',id), { id, text: inp.value.trim(), done: false, createdAt: Date.now() });
+        inp.value = '';
+    };
+    window.toggleShop = async (id) => {
+        const s = shopping.find(s => s.id === id);
+        if (s) await setDoc(doc(db,'shopping',id), { ...s, done: !s.done });
+    };
+    window.deleteShop = async (id) => {
+        if (confirm('Remove this item?')) await deleteDoc(doc(db,'shopping',id));
+    };
+
+    function renderShopping() {
+        const list = document.getElementById('shopList');
+        list.innerHTML = '';
+        if (!shopping.length) { list.innerHTML = `<li class="empty-msg">Shopping list is empty!</li>`; return; }
+        shopping.forEach(s => {
+            const li = document.createElement('li');
+            li.className = 'simple-card shopping-card' + (s.done?' done':'');
+            li.innerHTML = `
+                <div class="simple-check ${s.done?'checked':''}" onclick="toggleShop('${s.id}')">✓</div>
+                <span class="simple-text">${esc(s.text)}</span>
+                <button class="erase-btn" onclick="deleteShop('${s.id}')">×</button>`;
+            list.appendChild(li);
+        });
+    }
+
+    onSnapshot(query(collection(db,'shopping'), orderBy('createdAt')), snap => {
+        shopping = snap.docs.map(d => d.data());
+        renderShopping();
+    });
+
+    document.getElementById('mealInput').addEventListener('keydown', e => { if(e.key==='Enter') window.addMeal(); });
+    document.getElementById('mealNotes').addEventListener('keydown', e => { if(e.key==='Enter') window.addMeal(); });
+    document.getElementById('todoInput').addEventListener('keydown', e => { if(e.key==='Enter') window.addTodo(); });
+    document.getElementById('shopInput').addEventListener('keydown', e => { if(e.key==='Enter') window.addShop(); });
+
+</script>
+</body>
 </html>
