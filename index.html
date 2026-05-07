@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -502,12 +501,5 @@ onSnapshot(query(collection(db,'shopping'),orderBy('createdAt')),snap=>{
 
 /* ── ENTER KEYS ── */
 document.getElementById('mealInput').addEventListener('keydown',e=>{ if(e.key==='Enter') window.addMeal(); });
-document.getElementById('mealNotes').addEventListener('keydown',e=>{ if(e.key==='Enter') window.addMeal(); });
-document.getElementById('todoInput').addEventListener('keydown',e=>{ if(e.key==='Enter') window.addTodo(); });
-document.getElementById('shopInput').addEventListener('keydown',e=>{ if(e.key==='Enter') window.addShop(); });
+document.getElementById('mealNotes').add
 
-/* ── NOTIF STATUS ── */
-if(notifGranted) document.getElementById('notifBtn').textContent='🔔 Notifs ON';
-</script>
-</body>
-</html>
